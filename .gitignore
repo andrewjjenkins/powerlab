@@ -1,3 +1,5 @@
 /.direnv/
 /.vscode/
 /.envrc
+/credentials.yaml
+/pkg/serve/api

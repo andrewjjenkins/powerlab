@@ -7,6 +7,7 @@ require (
 	github.com/golang/glog v1.2.2
 	github.com/spf13/cobra v1.8.1
 	github.com/go-swagger/go-swagger v0.31.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -87,5 +88,4 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
