@@ -23,7 +23,7 @@ build: generate
 	cd client && npm run build
 
 clean:
-	rm -rf client/src/generated/* api/swagger.json data/mongo mongoed
+	rm -rf client/src/generated/* pkg/serve/api powerlab
 	$(GOCLEAN) ./pkg/... ./cmd/...
 
 .PHONY: all deps generate build load clean
