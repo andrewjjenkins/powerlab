@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/andrewjjenkins/powerlab/pkg/config"
+	serverModule "github.com/andrewjjenkins/powerlab/pkg/server"
 	"github.com/andrewjjenkins/powerlab/pkg/server/megarac"
 	"github.com/spf13/cobra"
 )
@@ -71,7 +72,7 @@ var powerOnCmd = &cobra.Command{
 		}
 		fmt.Printf("Logged in (session %s)\n", a.SessionId())
 
-		err = a.PowerCommand(megarac.PowerCommandOn)
+		err = a.PowerCommand(serverModule.PowerCommandOn)
 		if err != nil {
 			panic(err)
 		}

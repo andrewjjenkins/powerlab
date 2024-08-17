@@ -3,3 +3,4 @@
 /.envrc
 /credentials.yaml
 /pkg/serve/api
+/cmd/powerlab/__debug_*

@@ -4,6 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	serverModule "github.com/andrewjjenkins/powerlab/pkg/serve/server"
+	serverServerModule "github.com/andrewjjenkins/powerlab/pkg/server"
 )
 
 //go:generate mkdir -p api
@@ -13,12 +16,15 @@ type server struct {
 	e *gin.Engine
 }
 
-func Serve(inServer *http.Server) {
+func Serve(inServer *http.Server, serverManager *serverServerModule.ServerManager) {
 	s := &server{
 		e: gin.Default(),
 	}
 
 	s.registerApiServer(s.e.Group("/api"))
+
+	ss := serverModule.NewServer(serverManager)
+	ss.RegisterApiServer(s.e.Group("/api"))
 
 	inServer.Handler = s.e
 }
@@ -32,6 +38,12 @@ type VersionResponseBody struct {
 	Minor int `json:"minor"`
 	// Required: true
 	Build string `json:"build"`
+}
+
+func (s *server) wrap(f func(s *server, c *gin.Context)) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		f(s, c)
+	}
 }
 
 func (s *server) registerApiServer(r *gin.RouterGroup) {

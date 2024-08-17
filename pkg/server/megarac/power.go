@@ -2,14 +2,6 @@ package megarac
 
 import "fmt"
 
-const (
-	PowerCommandHardOff   = 0
-	PowerCommandOn        = 1
-	PowerCommandCycle     = 2
-	PowerCommandHardReset = 3
-	PowerCommandSoftOff   = 5
-)
-
 type powerCommandBody struct {
 	PowerCommand int `json:"power_command"`
 }

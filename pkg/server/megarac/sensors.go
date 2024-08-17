@@ -32,3 +32,7 @@ func (api *Api) GetSensors() (*SensorsResult, error) {
 	}
 	return &s, nil
 }
+
+func (api *Api) GetSensorsRaw() (interface{}, error) {
+	return api.GetSensors()
+}

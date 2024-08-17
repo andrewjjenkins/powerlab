@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/andrewjjenkins/powerlab/pkg/server"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,4 +34,23 @@ func LoadCredentials(filename string) (*Credentials, error) {
 		return nil, fmt.Errorf("failed parsing credentials %s: %v", filename, err)
 	}
 	return &c, nil
+}
+
+func LoadServers(credentialsFilename string) (*server.ServerManager, error) {
+	credentials, err := LoadCredentials(credentialsFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	manager := server.NewServerManager()
+
+	for k, c := range credentials.Servers {
+		server, err := server.NewServer(k, c.Username, c.Password)
+		if err != nil {
+			return nil, err
+		}
+		manager.Servers[k] = server
+	}
+
+	return &manager, nil
 }
