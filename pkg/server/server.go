@@ -20,6 +20,7 @@ type Server interface {
 	PowerCommand(command int) error
 	GetSensorsRaw() (interface{}, error)
 	GetSensors() (*model.ServerSensorReadings, error)
+	GetMetrics() (string, error)
 	Name() string
 }
 

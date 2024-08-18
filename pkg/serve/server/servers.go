@@ -88,6 +88,17 @@ func (ss *ServerServer) RegisterApiServer(r *gin.RouterGroup) {
 	//   Responses:
 	//     200: body:SensorsRawResponse
 	r.GET("/servers/:name/sensorsRaw", ss.wrap(GetServerSensorsRaw))
+
+	// swagger:route GET /api/metrics getMetrics
+	//
+	// Returns the metrics from a server in prometheus format
+	//
+	//   Produces:
+	//   - text/plain
+	//
+	//   Responses:
+	//     200: body:string
+	r.GET("/metrics", ss.wrap(GetMetrics))
 }
 
 func GetServers(ss *ServerServer, c *gin.Context) {
