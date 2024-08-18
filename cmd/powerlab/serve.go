@@ -24,12 +24,15 @@ var serveCmd = &cobra.Command{
 			WriteTimeout: 15 * time.Second,
 			ReadTimeout:  15 * time.Second,
 		}
-		serve.Serve(s, serverManager)
+		serve.Serve(s, serverManager, serveDevMode)
 
 		glog.Fatal(s.ListenAndServe())
 	},
 }
 
+var serveDevMode bool
+
 func init() {
+	serveCmd.PersistentFlags().BoolVar(&serveDevMode, "dev", false, "Proxy /ui/ to localhost:3000 for dev mode")
 	rootCmd.AddCommand(serveCmd)
 }

@@ -34,7 +34,7 @@ type server struct {
 	e *gin.Engine
 }
 
-func Serve(inServer *http.Server, serverManager *serverServerModule.ServerManager) {
+func Serve(inServer *http.Server, serverManager *serverServerModule.ServerManager, devMode bool) {
 	s := &server{
 		e: gin.Default(),
 	}
@@ -44,7 +44,30 @@ func Serve(inServer *http.Server, serverManager *serverServerModule.ServerManage
 	ss := serverModule.NewServer(serverManager)
 	ss.RegisterApiServer(s.e.Group("/api"))
 
-	s.registerUiServer(s.e.Group("/ui"), s.e.Group("/sockjs-node"))
+	if devMode {
+		s.registerUiServer(
+			s.e.Group("/ui"),
+			s.e.Group("/sockjs-node"),
+		)
+	} else {
+		s.e.Group("/ui").Any(
+			"/*filepath",
+			gin.WrapH(
+				http.StripPrefix(
+					"/ui",
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							upath := "/client/build" + r.URL.Path
+							if r.URL.Path == "/" {
+								upath = upath + "index.html"
+							}
+							http.ServeFileFS(w, r, content, upath)
+						},
+					),
+				),
+			),
+		)
+	}
 
 	s.e.Group("/").GET("/", func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/ui/")

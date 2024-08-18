@@ -3,7 +3,6 @@ import {
   useQuery
 } from '@tanstack/react-query'
 import { ServerSensorReadings, ServersResponse } from './generated/api';
-import { Server } from 'http';
 
 function Servers() {
   const { isPending, error, data } = useQuery({
