@@ -4,3 +4,4 @@
 /credentials.yaml
 /pkg/serve/api
 /cmd/powerlab/__debug_*
+/client/src/generated

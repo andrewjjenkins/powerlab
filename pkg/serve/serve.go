@@ -1,3 +1,21 @@
+// Package serve Powerlab API
+//
+// Serves consolidated view of multiple IPMI/DRAC/iLO implementations.
+//
+//	Schemes: http, https
+//	Host: localhost
+//	BasePath: /api
+//	Version: 1.0
+//	Contact: Andrew Jenkins <andrewjjenkins@gmail.com>
+//
+//	Consumes:
+//	- application/json
+//
+//	Produces:
+//	- application/json
+//	- text/plain
+//
+// swagger:meta
 package serve
 
 import (

@@ -45,8 +45,8 @@ func (ss *ServerServer) RegisterApiServer(r *gin.RouterGroup) {
 	//   Produces:
 	//   - application/json
 	//
-	//   Response:
-	//     200: body:serversResponse
+	//   Responses:
+	//     200: body:ServersResponse
 	r.GET("/servers", ss.wrap(GetServers))
 
 	// swagger:route GET /api/server/{name} getServerByName
@@ -56,7 +56,7 @@ func (ss *ServerServer) RegisterApiServer(r *gin.RouterGroup) {
 	//   Produces:
 	//   - application/json
 	//
-	//   Response:
+	//   Responses:
 	//     200: body:ServerResponse
 	r.GET("/servers/:name", ss.wrap(GetServerByName))
 
@@ -67,7 +67,7 @@ func (ss *ServerServer) RegisterApiServer(r *gin.RouterGroup) {
 	//   Produces:
 	//   - application/json
 	//
-	//   Response:
+	//   Responses:
 	//     200: body:SensorsRawResponse
 	r.GET("/servers/:name/sensorsRaw", ss.wrap(getServerSensorsRaw))
 
