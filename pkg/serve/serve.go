@@ -44,6 +44,8 @@ func Serve(inServer *http.Server, serverManager *serverServerModule.ServerManage
 	ss := serverModule.NewServer(serverManager)
 	ss.RegisterApiServer(s.e.Group("/api"))
 
+	s.registerUiServer(s.e.Group("/ui"), s.e.Group("/sockjs-node"))
+
 	inServer.Handler = s.e
 }
 

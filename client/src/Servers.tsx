@@ -1,40 +1,50 @@
 import React from 'react';
+import {
+  useQuery
+} from '@tanstack/react-query'
+import { ServersResponse } from './generated/api';
+import { Server } from 'http';
 
 function Servers() {
+  const { isPending, error, data } = useQuery({
+    queryKey: ['repoData'],
+    queryFn: () =>
+      fetch('http://shaftoe.lan:8080/api/servers').then((res) =>
+        res.json() as Promise<ServersResponse>
+      ),
+  })
+
+  if (isPending) return (
+    <div>Loading...</div>
+  );
+
+  if (error) return (
+    <div>An error has occurred: {error.message}</div>
+  );
+
     return (
         <div className="overflow-x-auto">
             <table className="table">
-                {/* head */}
                 <thead>
                 <tr>
                     <th></th>
                     <th>Name</th>
-                    <th>Job</th>
-                    <th>Favorite Color</th>
+                    <th>Power Status</th>
+                    <th>Power (W)</th>
                 </tr>
                 </thead>
                 <tbody>
-                {/* row 1 */}
-                <tr>
-                    <th>1</th>
-                    <td>Cy Ganderton</td>
-                    <td>Quality Control Specialist</td>
-                    <td>Blue</td>
-                </tr>
-                {/* row 2 */}
-                <tr>
-                    <th>2</th>
-                    <td>Hart Hagerty</td>
-                    <td>Desktop Support Technician</td>
-                    <td>Purple</td>
-                </tr>
-                {/* row 3 */}
-                <tr>
-                    <th>3</th>
-                    <td>Brice Swyre</td>
-                    <td>Tax Accountant</td>
-                    <td>Red</td>
-                </tr>
+                {data.map((server, index) => {
+                    return (
+                        <tr key={index}>
+                            <th>{index}</th>
+                            <td>{server.name}</td>
+                            <td>{server.power_status}</td>
+                            <td>{server.power_watts}</td>
+                        </tr>
+                    );
+                })
+                }
                 </tbody>
             </table>
             </div>
