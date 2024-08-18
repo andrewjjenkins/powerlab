@@ -20,7 +20,7 @@ type ServerResponse struct {
 }
 
 // ServersResponse describes the servers
-// swagger:model serversResponse
+// swagger:model ServersResponse
 type ServersResponse []ServerResponse
 
 func NewServer(manager *server.ServerManager) ServerServer {
@@ -35,6 +35,8 @@ func (ss *ServerServer) wrap(f func(ss *ServerServer, c *gin.Context)) gin.Handl
 	}
 }
 
+// SensorsRawResponse is the raw JSON of sensor data (server specific)
+// swagger:model SensorsRawResponse
 type SensorsRawResponse interface{}
 
 func (ss *ServerServer) RegisterApiServer(r *gin.RouterGroup) {
