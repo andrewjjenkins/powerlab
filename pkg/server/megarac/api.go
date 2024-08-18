@@ -2,6 +2,7 @@ package megarac
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -9,7 +10,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"sync"
 	"time"
+
+	"github.com/golang/glog"
+	"github.com/linzhengen/retryabletransport"
 
 	"github.com/andrewjjenkins/powerlab/pkg/responsecache"
 )
@@ -20,10 +25,14 @@ type Session struct {
 }
 
 type Api struct {
-	ServerAddr string
-	session    *Session
-	client     *http.Client
-	cache      *responsecache.Cache
+	ServerAddr  string
+	session     *Session
+	client      *http.Client
+	relogin     sync.Mutex
+	cache       *responsecache.Cache
+	insecureSsl bool
+	username    string
+	password    string
 }
 
 func (api *Api) Name() string {
@@ -102,7 +111,33 @@ func (api *Api) Delete(path string) (*http.Response, error) {
 	return api.client.Do(req)
 }
 
-func NewApi(serverAddr string, insecureSsl bool) (*Api, error) {
+func (api *Api) checkRetry(
+	req *http.Request, res *http.Response, err error) bool {
+	fmt.Printf("Relogin checkRetry called (%d, %v)\n", res.StatusCode, err)
+	if res.StatusCode != 401 {
+		glog.Warningf("relogin: error code %d not fixable", res.StatusCode)
+		return false
+	}
+
+	if !api.relogin.TryLock() {
+		glog.Warningf("relogin: already in progress")
+		return false
+	}
+	defer api.relogin.Unlock()
+
+	jar, session, err := api.loginInternal()
+	if err != nil {
+		glog.Warningf("relogin failed: %v", err)
+		return false
+	}
+	api.client.Jar = *jar
+	api.session = session
+
+	glog.Infof("Relogin successful, signaling retry\n")
+	return true
+}
+
+func newHttpClientInternal(insecureSsl bool) *http.Client {
 	transport := http.Transport{}
 	if insecureSsl {
 		transport.TLSClientConfig = &tls.Config{
@@ -112,18 +147,38 @@ func NewApi(serverAddr string, insecureSsl bool) (*Api, error) {
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	a := Api{
-		ServerAddr: serverAddr,
-		session:    nil,
-		client: &http.Client{
-			Timeout:   time.Duration(15 * time.Second),
-			Transport: &transport,
-			Jar:       jar,
-		},
-		cache: responsecache.New(),
+	return &http.Client{
+		Timeout:   time.Duration(15 * time.Second),
+		Transport: &transport,
+		Jar:       jar,
 	}
+}
+
+func NewApi(serverAddr string, insecureSsl bool) (*Api, error) {
+	a := Api{
+		ServerAddr:  serverAddr,
+		session:     nil,
+		cache:       responsecache.New(),
+		insecureSsl: insecureSsl,
+		client:      newHttpClientInternal(insecureSsl),
+	}
+
+	retryTransport := retryabletransport.New(
+		a.client.Transport,
+		func(req *http.Request, res *http.Response, err error) bool {
+			return a.checkRetry(req, res, err)
+		},
+		func(ctx context.Context, err error, duration time.Duration) {
+			glog.Infof("Retrying (%d): %v", duration.Milliseconds(), err)
+		},
+		&retryabletransport.BackOffPolicy{
+			MaxRetries: 2,
+		},
+	)
+	a.client.Transport = retryTransport
+
 	return &a, nil
 }

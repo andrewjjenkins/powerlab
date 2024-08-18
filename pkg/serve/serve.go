@@ -35,6 +35,10 @@ type server struct {
 }
 
 func Serve(inServer *http.Server, serverManager *serverServerModule.ServerManager, devMode bool) {
+	if !devMode {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	s := &server{
 		e: gin.Default(),
 	}

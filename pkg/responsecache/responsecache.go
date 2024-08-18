@@ -12,7 +12,7 @@ type Cache struct {
 
 func New() *Cache {
 	c := Cache{
-		Responses: expirable.NewLRU[string, interface{}](500, nil, time.Second*30),
+		Responses: expirable.NewLRU[string, interface{}](500, nil, time.Second*14),
 	}
 	return &c
 }

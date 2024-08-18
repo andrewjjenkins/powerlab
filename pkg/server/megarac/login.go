@@ -25,51 +25,67 @@ type loginResponse struct {
 	PasswordStatus int    `json:"passwordStatus"`
 }
 
-func (api *Api) Login(username, password string) error {
-	if api.session != nil {
-		return errors.New("already logged in")
-	}
-
+func (api *Api) loginInternal() (*http.CookieJar, *Session, error) {
 	u := "https://" + api.ServerAddr + "/api/session"
 	data := url.Values{}
-	data.Set("username", username)
-	data.Set("password", password)
+	data.Set("username", api.username)
+	data.Set("password", api.password)
 
 	req, err := http.NewRequest("POST", u, strings.NewReader(data.Encode()))
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	req.Header.Add("Content-type", "application/x-www-form-urlencoded")
 
-	res, err := api.client.Do(req)
+	// We do this with a separate client so we don't retry-our-retry
+	client := newHttpClientInternal(api.insecureSsl)
+	res, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Login failed: %v", err)
+		return nil, nil, fmt.Errorf("Login failed: %v", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode == 401 {
-		return fmt.Errorf("Login authorization failed")
+		return nil, nil, fmt.Errorf("Login authorization failed")
 	} else if res.StatusCode != 200 {
-		return fmt.Errorf("Login failed: %v", res.StatusCode)
+		return nil, nil, fmt.Errorf("Login failed: %v", res.StatusCode)
 	}
 
 	l := loginResponse{}
 	err = json.NewDecoder(res.Body).Decode(&l)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	if l.Ok != 0 {
 		// "Ok" is 0 to indicate ok. Shrug.
-		return fmt.Errorf("Login not ok (%d)", l.Ok)
+		return nil, nil, fmt.Errorf("Login not ok (%d)", l.Ok)
 	}
 	if l.CsrfToken == "" {
-		return fmt.Errorf("Login response did not contain CSRFToken")
+		return nil, nil, fmt.Errorf("Login response did not contain CSRFToken")
 	}
-	api.session = &Session{
+	session := &Session{
 		CsrfToken: l.CsrfToken,
 		SessionId: fmt.Sprintf("%d", l.RacSessionId),
 	}
-	glog.Info("Logged in: %v", l.Ok)
+	return &client.Jar, session, nil
+}
+
+func (api *Api) Login(username, password string) error {
+	if api.session != nil {
+		return errors.New("already logged in")
+	}
+
+	api.username = username
+	api.password = password
+
+	jar, session, err := api.loginInternal()
+	if err != nil {
+		return err
+	}
+
+	api.client.Jar = *jar
+	api.session = session
+	glog.Info("Logged in")
 	return nil
 }
 
