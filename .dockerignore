@@ -1,0 +1,9 @@
+/pkg/serve/client/node_modules
+/pkg/serve/client/src/generated
+/pkg/serve/client/build
+/client
+/.direnv
+/.vscode
+/credentials.yaml
+/.envrc
+/Dockerfile

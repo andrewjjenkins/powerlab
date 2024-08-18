@@ -2,7 +2,7 @@
 var fs = require('fs');
 var CodeGen = require("swagger-typescript-codegen").CodeGen;
 
-var swaggerFile = '../pkg/serve/api/swagger.json';
+var swaggerFile = '../api/swagger.json';
 var swagger = JSON.parse(fs.readFileSync(swaggerFile, "UTF-8"));
 var tsCode = CodeGen.getTypescriptCode({
   className: "Api",

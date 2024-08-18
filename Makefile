@@ -6,24 +6,22 @@ GOCLEAN=$(GOCMD) clean
 all: build
 
 deps:
-	#go get ./...
-	#go install "github.com/go-swagger/go-swagger/cmd/swagger@latest"
-	cd client && npm install
+	cd pkg/serve/client && npm install
 
 generate:
 	$(GOGENERATE) ./cmd/... ./pkg/...
-	cd client && npm run generate	
+	cd pkg/serve/client && npm run generate	
 
 run: deps
-	cd client && npm run dev
+	cd pkg/serve/client && npm run dev
 
 build: generate
+	cd pkg/serve/client && npm run build
 	$(GOBUILD) ./pkg/...
 	$(GOBUILD) ./cmd/powerlab
-	cd client && npm run build
 
 clean:
-	rm -rf client/src/generated/* pkg/serve/api powerlab
+	rm -rf pkg/serve/client/src/generated/* pkg/serve/api powerlab
 	$(GOCLEAN) ./pkg/... ./cmd/...
 
 .PHONY: all deps generate build load clean
