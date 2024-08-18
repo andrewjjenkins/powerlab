@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/andrewjjenkins/powerlab/pkg/model"
 	"github.com/andrewjjenkins/powerlab/pkg/server"
 )
 
@@ -35,6 +36,10 @@ func (ss *ServerServer) wrap(f func(ss *ServerServer, c *gin.Context)) gin.Handl
 	}
 }
 
+// SensorsResponse is sensor data (generic to all servers)
+// swagger:model SensorsResponse
+type SensorsResponse model.ServerSensorReadings
+
 // SensorsRawResponse is the raw JSON of sensor data (server specific)
 // swagger:model SensorsRawResponse
 type SensorsRawResponse interface{}
@@ -62,6 +67,17 @@ func (ss *ServerServer) RegisterApiServer(r *gin.RouterGroup) {
 	//     200: body:ServerResponse
 	r.GET("/servers/:name", ss.wrap(GetServerByName))
 
+	// swagger:route GET /api/server/{name}/sensors getServerSensors
+	//
+	// Returns the sensors from a server
+	//
+	//   Produces:
+	//   - application/json
+	//
+	//   Responses:
+	//     200: body:SensorsResponse
+	r.GET("/servers/:name/sensors", ss.wrap(GetServerSensors))
+
 	// swagger:route GET /api/server/{name}/sensorsRaw getServerSensorsRaw
 	//
 	// Returns the sensors from a server as raw JSON
@@ -71,8 +87,7 @@ func (ss *ServerServer) RegisterApiServer(r *gin.RouterGroup) {
 	//
 	//   Responses:
 	//     200: body:SensorsRawResponse
-	r.GET("/servers/:name/sensorsRaw", ss.wrap(getServerSensorsRaw))
-
+	r.GET("/servers/:name/sensorsRaw", ss.wrap(GetServerSensorsRaw))
 }
 
 func GetServers(ss *ServerServer, c *gin.Context) {
@@ -100,18 +115,4 @@ func GetServerByName(ss *ServerServer, c *gin.Context) {
 		PowerStatus: 1,
 		PowerWatts:  313.2,
 	})
-}
-
-func getServerSensorsRaw(ss *ServerServer, c *gin.Context) {
-	name := c.Param("name")
-	server, ok := ss.manager.Servers[name]
-	if !ok {
-		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("no server %s", name))
-		return
-	}
-	rawSensorOut, err := server.GetSensorsRaw()
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("error getting sensor data: %v", err))
-	}
-	c.JSON(http.StatusOK, rawSensorOut)
 }

@@ -2,16 +2,27 @@ import React from 'react';
 import {
   useQuery
 } from '@tanstack/react-query'
-import { ServersResponse } from './generated/api';
+import { ServerSensorReadings, ServersResponse } from './generated/api';
 import { Server } from 'http';
 
 function Servers() {
   const { isPending, error, data } = useQuery({
     queryKey: ['repoData'],
     queryFn: () =>
-      fetch('http://shaftoe.lan:8080/api/servers').then((res) =>
+      fetch('/api/servers').then((res) =>
         res.json() as Promise<ServersResponse>
-      ),
+      ).then((servers) => {
+        return Promise.all(servers.map((server, i) => {
+          const sensorUrl = `/api/servers/${server.name}/sensors`;
+          return fetch(sensorUrl).then((res) =>
+            res.json() as Promise<ServerSensorReadings>).then((readings) => {
+              return {
+                name: server.name,
+                ...readings,
+              };
+            })
+        }))
+      }),
   })
 
   if (isPending) return (
@@ -29,7 +40,9 @@ function Servers() {
                 <tr>
                     <th></th>
                     <th>Name</th>
-                    <th>Power Status</th>
+                    <th>CPU Temp</th>
+                    <th>Chassis Temp</th>
+                    <th>Fan Speed</th>
                     <th>Power (W)</th>
                 </tr>
                 </thead>
@@ -39,8 +52,10 @@ function Servers() {
                         <tr key={index}>
                             <th>{index}</th>
                             <td>{server.name}</td>
-                            <td>{server.power_status}</td>
-                            <td>{server.power_watts}</td>
+                            <td>{server.CpuTemp}</td>
+                            <td>{server.ChassisTemp}</td>
+                            <td>{server.FanSpeed}</td>
+                            <td>{server.PowerWatts}</td>
                         </tr>
                     );
                 })

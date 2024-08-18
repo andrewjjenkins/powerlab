@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"time"
+
+	"github.com/andrewjjenkins/powerlab/pkg/responsecache"
 )
 
 type Session struct {
@@ -21,6 +23,7 @@ type Api struct {
 	ServerAddr string
 	session    *Session
 	client     *http.Client
+	cache      *responsecache.Cache
 }
 
 func (api *Api) Name() string {
@@ -120,6 +123,7 @@ func NewApi(serverAddr string, insecureSsl bool) (*Api, error) {
 			Transport: &transport,
 			Jar:       jar,
 		},
+		cache: responsecache.New(),
 	}
 	return &a, nil
 }

@@ -4,9 +4,9 @@ go 1.21
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-swagger/go-swagger v0.31.0
 	github.com/golang/glog v1.2.2
 	github.com/spf13/cobra v1.8.1
-	github.com/go-swagger/go-swagger v0.31.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -40,6 +40,7 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect

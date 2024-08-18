@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/andrewjjenkins/powerlab/pkg/model"
 	"github.com/andrewjjenkins/powerlab/pkg/server/megarac"
 )
 
@@ -18,6 +19,7 @@ type Server interface {
 	Logout() error
 	PowerCommand(command int) error
 	GetSensorsRaw() (interface{}, error)
+	GetSensors() (*model.ServerSensorReadings, error)
 	Name() string
 }
 

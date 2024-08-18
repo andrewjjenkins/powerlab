@@ -46,6 +46,10 @@ func Serve(inServer *http.Server, serverManager *serverServerModule.ServerManage
 
 	s.registerUiServer(s.e.Group("/ui"), s.e.Group("/sockjs-node"))
 
+	s.e.Group("/").GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "/ui/")
+	})
+
 	inServer.Handler = s.e
 }
 
