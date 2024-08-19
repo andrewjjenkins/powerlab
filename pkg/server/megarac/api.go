@@ -137,7 +137,7 @@ func (api *Api) Post(path string, data interface{}) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Add("Content-type", "application/json")
+	r.Header.Set("Content-type", "application/json")
 	return api.Do(r)
 }
 
