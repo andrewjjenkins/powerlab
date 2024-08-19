@@ -40,7 +40,7 @@ func (api *Api) getSensorsInternal() (*SensorsResult, error) {
 		if res == nil {
 			return nil, fmt.Errorf("cached result invalid type")
 		}
-		slog.Info("Cache hit")
+		slog.Debug("Cache hit", "path", u)
 		return &res, nil
 	}
 

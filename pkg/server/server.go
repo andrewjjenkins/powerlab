@@ -1,7 +1,10 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/andrewjjenkins/powerlab/pkg/model"
+	"github.com/andrewjjenkins/powerlab/pkg/server/hpilo4"
 	"github.com/andrewjjenkins/powerlab/pkg/server/megarac"
 )
 
@@ -34,11 +37,24 @@ func NewServerManager() ServerManager {
 	}
 }
 
-func NewServer(name, username, password string) (Server, error) {
-	// FIXME: Ensure the type is megarac
-	s, err := megarac.NewApi(name, true)
-	if err != nil {
-		return nil, err
+func NewServer(name, kind, username, password string) (Server, error) {
+	var s Server
+	var err error
+
+	switch kind {
+	case "megarac":
+		s, err = megarac.NewApi(name, true)
+		if err != nil {
+			return nil, err
+		}
+		break
+	case "hpilo4":
+		s, err = hpilo4.NewApi(name, true)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("unknown server kind %s", kind)
 	}
 	err = s.Login(username, password)
 	if err != nil {

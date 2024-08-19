@@ -22,6 +22,7 @@ function Servers() {
             })
         }))
       }),
+      refetchInterval: 10000,
   })
 
   if (isPending) return (

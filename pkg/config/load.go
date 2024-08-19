@@ -12,6 +12,7 @@ import (
 type ServerCredentials struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
+	Kind     string `"yaml:"kind"`
 }
 
 type Credentials struct {
@@ -33,6 +34,15 @@ func LoadCredentials(filename string) (*Credentials, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed parsing credentials %s: %v", filename, err)
 	}
+
+	// Set default server kind
+	for k, creds := range c.Servers {
+		if creds.Kind == "" {
+			creds.Kind = "megarac"
+		}
+		c.Servers[k] = creds
+	}
+
 	return &c, nil
 }
 
@@ -45,7 +55,7 @@ func LoadServers(credentialsFilename string) (*server.ServerManager, error) {
 	manager := server.NewServerManager()
 
 	for k, c := range credentials.Servers {
-		server, err := server.NewServer(k, c.Username, c.Password)
+		server, err := server.NewServer(k, c.Kind, c.Username, c.Password)
 		if err != nil {
 			return nil, err
 		}
