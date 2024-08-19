@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/glog"
+	"golang.org/x/exp/slog"
 )
 
 func getMetricsInternal(ss *ServerServer) (string, error) {
@@ -38,11 +38,11 @@ func GetMetrics(ss *ServerServer, c *gin.Context) {
 	c.Writer.Header().Set("content-length", fmt.Sprint(len(metrics)))
 	bytes, err := c.Writer.Write([]byte(metrics))
 	if err != nil {
-		glog.Error("failed to write body: %v", err)
+		slog.Error("failed to write body", "error", err)
 		return
 	}
 	if bytes != len(metrics) {
-		glog.Error("failed to write entire body (%d < %d)", bytes, len(metrics))
+		slog.Error("failed to write entire body", "written", bytes, "total", len(metrics))
 		return
 	}
 }

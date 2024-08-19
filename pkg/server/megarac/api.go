@@ -2,19 +2,16 @@ package megarac
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"sync"
 	"time"
-
-	"github.com/golang/glog"
-	"github.com/linzhengen/retryabletransport"
 
 	"github.com/andrewjjenkins/powerlab/pkg/responsecache"
 )
@@ -56,8 +53,49 @@ func (api *Api) NewRequest(method, path string, body io.Reader) (*http.Request, 
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Add("X-CSRFTOKEN", api.session.CsrfToken)
+	r.Header.Set("X-CSRFTOKEN", api.session.CsrfToken)
 	return r, nil
+}
+
+func (api *Api) Do(req *http.Request) (*http.Response, error) {
+	// FIXME: Maybe a body size limit and don't retry huge requests?
+	var bodyBytes []byte
+	var err error
+	var hijackedBody io.ReadCloser
+	if req.Body != nil && req.Body != http.NoBody {
+		bodyBytes, err = io.ReadAll(req.Body)
+		if err != nil {
+			return nil, err
+		}
+		hijackedBody = req.Body
+		defer hijackedBody.Close()
+		req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+	}
+
+	res, err := api.client.Do(req)
+
+	shouldRetry := api.checkRetry(req, res, err)
+	if !shouldRetry {
+		slog.Debug("not retrying request", "status", res.StatusCode, "error", err)
+		return res, err
+	}
+
+	slog.Warn("retrying request", "status", res.StatusCode, "error", err)
+
+	// Reset request body, CSRFToken and cookies
+	if bodyBytes != nil {
+		req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+	}
+	req.Header.Set("X-CSRFTOKEN", api.session.CsrfToken)
+	req.Header.Del("cookie")
+	for _, cookie := range api.client.Jar.Cookies(req.URL) {
+		req.AddCookie(cookie)
+	}
+
+	// Replay request
+	res, err = api.client.Do(req)
+	slog.Warn("retried request", "status", res.StatusCode, "error", err)
+	return res, err
 }
 
 func (api *Api) Get(path string) (*http.Response, error) {
@@ -65,7 +103,7 @@ func (api *Api) Get(path string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	return api.client.Do(r)
+	return api.Do(r)
 }
 
 func (api *Api) GetJson(path string, obj interface{}) error {
@@ -100,7 +138,7 @@ func (api *Api) Post(path string, data interface{}) (*http.Response, error) {
 		return nil, err
 	}
 	r.Header.Add("Content-type", "application/json")
-	return api.client.Do(r)
+	return api.Do(r)
 }
 
 func (api *Api) Delete(path string) (*http.Response, error) {
@@ -108,32 +146,43 @@ func (api *Api) Delete(path string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	return api.client.Do(req)
+	return api.Do(req)
 }
 
 func (api *Api) checkRetry(
 	req *http.Request, res *http.Response, err error) bool {
-	fmt.Printf("Relogin checkRetry called (%d, %v)\n", res.StatusCode, err)
 	if res.StatusCode != 401 {
-		glog.Warningf("relogin: error code %d not fixable", res.StatusCode)
+		slog.Debug("relogin: error code not fixable", "error code", res.StatusCode)
 		return false
+	}
+	if req.URL.Path == "/api/session" {
+		slog.Debug(
+			"relogin: cannot retry a login request",
+			"error code", res.StatusCode,
+			"method", req.Method,
+			"path", req.URL.Path,
+		)
 	}
 
 	if !api.relogin.TryLock() {
-		glog.Warningf("relogin: already in progress")
+		slog.Warn("relogin: already in progress")
 		return false
 	}
 	defer api.relogin.Unlock()
 
 	jar, session, err := api.loginInternal()
 	if err != nil {
-		glog.Warningf("relogin failed: %v", err)
+		slog.Warn("relogin failed", "error", err)
 		return false
 	}
 	api.client.Jar = *jar
 	api.session = session
 
-	glog.Infof("Relogin successful, signaling retry\n")
+	slog.Info("Relogin successful, signaling retry")
+
+	// Megarac is not ready to use the session immediately after login.
+	time.Sleep(200 * time.Millisecond)
+
 	return true
 }
 
@@ -165,20 +214,6 @@ func NewApi(serverAddr string, insecureSsl bool) (*Api, error) {
 		insecureSsl: insecureSsl,
 		client:      newHttpClientInternal(insecureSsl),
 	}
-
-	retryTransport := retryabletransport.New(
-		a.client.Transport,
-		func(req *http.Request, res *http.Response, err error) bool {
-			return a.checkRetry(req, res, err)
-		},
-		func(ctx context.Context, err error, duration time.Duration) {
-			glog.Infof("Retrying (%d): %v", duration.Milliseconds(), err)
-		},
-		&retryabletransport.BackOffPolicy{
-			MaxRetries: 2,
-		},
-	)
-	a.client.Transport = retryTransport
 
 	return &a, nil
 }

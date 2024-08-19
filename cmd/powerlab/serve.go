@@ -7,7 +7,6 @@ import (
 	"github.com/andrewjjenkins/powerlab/pkg/config"
 	"github.com/andrewjjenkins/powerlab/pkg/serve"
 
-	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +25,7 @@ var serveCmd = &cobra.Command{
 		}
 		serve.Serve(s, serverManager, serveDevMode)
 
-		glog.Fatal(s.ListenAndServe())
+		s.ListenAndServe()
 	},
 }
 

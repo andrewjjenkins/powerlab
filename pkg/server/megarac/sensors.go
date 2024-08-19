@@ -2,8 +2,7 @@ package megarac
 
 import (
 	"fmt"
-
-	"github.com/golang/glog"
+	"log/slog"
 
 	"github.com/andrewjjenkins/powerlab/pkg/model"
 )
@@ -41,7 +40,7 @@ func (api *Api) getSensorsInternal() (*SensorsResult, error) {
 		if res == nil {
 			return nil, fmt.Errorf("cached result invalid type")
 		}
-		glog.Info("Cache hit")
+		slog.Info("Cache hit")
 		return &res, nil
 	}
 

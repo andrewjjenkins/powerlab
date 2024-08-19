@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/golang/glog"
 )
 
 type loginResponse struct {
@@ -85,7 +84,7 @@ func (api *Api) Login(username, password string) error {
 
 	api.client.Jar = *jar
 	api.session = session
-	glog.Info("Logged in")
+	slog.Info("Logged in")
 	return nil
 }
 
