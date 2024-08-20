@@ -13,8 +13,8 @@ func (api *Api) GetMetrics() (string, error) {
 	}
 
 	timestamp := time.Now().UnixMilli()
-
 	var builder strings.Builder
+
 	for _, sensor := range *sensorsInternal {
 		fmt.Fprintf(
 			&builder,
