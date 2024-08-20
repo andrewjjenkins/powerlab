@@ -3,6 +3,7 @@ import {
   useQuery
 } from '@tanstack/react-query'
 import { ServerSensorReadings, ServersResponse } from './generated/api';
+import PowerController from './components/PowerController';
 
 function Servers() {
   const { isPending, error, data } = useQuery({
@@ -44,6 +45,7 @@ function Servers() {
                     <th>Chassis Temp</th>
                     <th>Fan Speed</th>
                     <th>Power (W)</th>
+                    <th className="text-center">Control</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -56,6 +58,7 @@ function Servers() {
                             <td>{server.ChassisTemp}</td>
                             <td>{server.FanSpeed}</td>
                             <td>{server.PowerWatts}</td>
+                            <td><PowerController powerState="on" /></td>
                         </tr>
                     );
                 })
